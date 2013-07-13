@@ -142,8 +142,21 @@ diff -u ../multitail-5.2.13-orig/utils.c ./utils.c
  	}
  
  	usleep(1000);
-@@ -205,9 +209,14 @@
- 				error_exit("Problem stopping child process with PID %d (SIGKILL).\n", pid);
+@@ -199,15 +203,24 @@
+ 		usleep(1000);
+ 
+ 		/* ...and then really terminate the process */
+-		if (mykillpg(pid, SIGKILL) == -1)
++		if (mykillpg(pid, SIGKILL) == -1 && errno != ESRCH)
+ 		{
+-			if (errno != ESRCH)
+-				error_exit("Problem stopping child process with PID %d (SIGKILL).\n", pid);
++			if (errno == EINVAL)
++				error_exit("Bad signal when stopping child process with PID %d (SIGKILL).\n", pid);
++			#ifndef __APPLE__
++					else if (errno == EPERM)
++						error_exit("Bad permissions stopping child process with PID %d (SIGTERM).\n", pid);
++			#endif
  		}
  	}
 -	else if (errno != ESRCH)
